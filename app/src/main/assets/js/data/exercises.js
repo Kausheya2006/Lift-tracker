@@ -612,10 +612,10 @@ const LIB = [
     ['f562', 'Standing Front Barbell Raise Over Head', 2, 'B', 562],
     ['f563', 'Standing Inner-Biceps Curl', 4, 'D', 563],
     ['f564', 'Standing Leg Curl', 9, 'M', 564],
-    ['f565', 'Standing Low-Pulley Deltoid Raise', 2, 'C', 565],
+    ['f565', 'Cable Lateral Raise (Standing, One Arm)', 2, 'C', 565],
     ['f566', 'Standing Low-Pulley One-Arm Triceps Extension', 5, 'C', 566],
     ['e23', 'Standing Military Press', 2, 'B', 567],
-    ['f568', 'Standing One-Arm Cable Curl', 4, 'C', 568],
+    ['f568', 'Standing One-Arm Cable (Bayesian) Curl', 4, 'C', 568],
     ['f569', 'Standing One-Arm Dumbbell Curl Over Incline Bench', 4, 'D', 569],
     ['f570', 'Standing One-Arm Dumbbell Triceps Extension', 5, 'D', 570],
     ['f571', 'Overhead Triceps Extension - Barbell', 5, 'B', 571],
@@ -687,4 +687,5 @@ const LIB = [
     ['e87', 'Mountain Climber', 7, 'W', -1],
     ['x1', 'Forearm Machine - Wrist Curl', 6, 'M', -1],
     ['x2', 'Forearm Machine - Wrist Extension', 6, 'M', -1],
+    ['x3', 'Overhead Triceps Extension - Cable Straight Bar', 5, 'C', 101],
 ];
