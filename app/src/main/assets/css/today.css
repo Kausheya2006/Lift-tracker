@@ -224,3 +224,65 @@
     font-weight: 600;
     padding: 6px 10px;
 }
+
+/* Left / right tracking */
+.side-h {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 750;
+    font-size: 14px;
+    margin: 16px 0 8px;
+}
+.side-h i {
+    font-style: normal;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    background: color-mix(in srgb, var(--ac) 16%, transparent);
+    color: var(--ac);
+}
+.tgl {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--ln);
+    font-weight: 600;
+    font-size: 14px;
+    text-align: left;
+}
+.tgl .sw {
+    position: relative;
+    flex: none;
+    width: 42px;
+    height: 24px;
+    border-radius: 12px;
+    background: var(--sf2);
+    transition: background 0.2s;
+}
+.tgl .sw::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--mu);
+    transition:
+        transform 0.2s,
+        background 0.2s;
+}
+.tgl[aria-checked='true'] .sw {
+    background: color-mix(in srgb, var(--ac) 30%, transparent);
+}
+.tgl[aria-checked='true'] .sw::after {
+    transform: translateX(18px);
+    background: var(--ac);
+}

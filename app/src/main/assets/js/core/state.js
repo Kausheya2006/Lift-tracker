@@ -12,6 +12,7 @@ const fresh = () => ({
     logs: {},
     unit: 'kg',
     theme: 'auto',
+    splitPref: {},
 });
 
 function load() {

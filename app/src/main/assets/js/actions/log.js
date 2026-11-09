@@ -60,7 +60,7 @@ Object.assign(A, {
             s = en.sets[+t.dataset.s];
         s.d = s.d ? 0 : 1;
         if (s.d && !s.w) {
-            const lp = lastPerf(en.ex, ui.date);
+            const lp = lastPerf(en.ex, ui.date, s.side);
             if (lp) s.w = lp.w;
         }
         save();
@@ -72,18 +72,26 @@ Object.assign(A, {
         save();
         render();
     },
+    // Sets can belong to a side (data-side="L" or "R") when an exercise is tracked left/right.
     addset: (t) => {
-        const sets = lg().entries[+t.dataset.e].sets;
-        const p = [...sets].reverse().find((s) => !s.wu);
-        sets.push({ w: p ? p.w : '', r: p ? p.r : '', d: 0 });
+        const sets = lg().entries[+t.dataset.e].sets,
+            side = t.dataset.side,
+            mine = sets.map((s, i) => [s, i]).filter(([s]) => !side || s.side === side),
+            p = [...mine].reverse().find(([s]) => !s.wu),
+            ns = { w: p ? p[0].w : '', r: p ? p[0].r : '', d: 0 };
+        if (side) ns.side = side;
+        sets.splice(mine.length ? mine[mine.length - 1][1] + 1 : sets.length, 0, ns);
         save();
         render();
     },
     addwu: (t) => {
-        const sets = lg().entries[+t.dataset.e].sets;
-        const f = sets.find((s) => !s.wu);
-        const i = sets.filter((s) => s.wu).length;
-        sets.splice(i, 0, { wu: 1, w: f && f.w ? rnd(num(f.w) * 0.5) : '', r: f ? f.r : '', d: 0 });
+        const sets = lg().entries[+t.dataset.e].sets,
+            side = t.dataset.side,
+            mine = sets.map((s, i) => [s, i]).filter(([s]) => !side || s.side === side),
+            f = mine.find(([s]) => !s.wu),
+            ns = { wu: 1, w: f && f[0].w ? rnd(num(f[0].w) * 0.5) : '', r: f ? f[0].r : '', d: 0 };
+        if (side) ns.side = side;
+        sets.splice((mine.length ? mine[0][1] : 0) + mine.filter(([s]) => s.wu).length, 0, ns);
         save();
         render();
     },
@@ -97,7 +105,7 @@ Object.assign(A, {
             const L = lg();
             ids.forEach((id) => {
                 if (!L.entries.some((e) => e.ex === id))
-                    L.entries.push({ ex: id, sets: mkSets(id, ui.date, 0, 3, '') });
+                    L.entries.push(newEntry(id, ui.date, 0, 3, ''));
             });
             save();
         }),
@@ -128,8 +136,45 @@ Object.assign(A, {
         render();
     },
     rmset: (t) => {
-        lg().entries[+t.dataset.e].sets.pop();
+        const sets = lg().entries[+t.dataset.e].sets,
+            side = t.dataset.side;
+        for (let i = sets.length - 1; i >= 0; i--) {
+            if (!side || sets[i].side === side) {
+                sets.splice(i, 1);
+                break;
+            }
+        }
         save();
         render();
+    },
+    // Switch an exercise between one list and separate left / right lists.
+    split: (t) => {
+        const en = lg().entries[+t.dataset.e];
+        if (!en.split) {
+            const left = en.sets.map((s) => ({ ...s, side: 'L' })),
+                right = en.sets.map((s) => ({ ...s, side: 'R', d: 0 }));
+            en.sets = left.concat(right);
+            en.split = true;
+            S.splitPref[en.ex] = true;
+            save();
+            render();
+        } else {
+            ask(
+                'Combine left and right into one list? The right-side sets will be removed.',
+                'Combine',
+                () => {
+                    en.sets = en.sets
+                        .filter((s) => s.side === 'L')
+                        .map((s) => {
+                            const o = { ...s };
+                            delete o.side;
+                            return o;
+                        });
+                    en.split = false;
+                    S.splitPref[en.ex] = false;
+                    save();
+                }
+            );
+        }
     },
 });

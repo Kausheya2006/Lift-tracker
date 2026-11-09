@@ -144,55 +144,111 @@ function vChoose(d) {
 function entryHTML(en, ei, date) {
     const ex = getEx(en.ex) || { name: 'Removed exercise', m: 'Chest', e: 'W' },
         st = stats(en.ex),
-        lp = lastPerf(en.ex, date);
-    let n = 0,
-        anyPR = false;
-    const rows = en.sets
-        .map((s, si) => {
-            if (!s.wu) n++;
-            const isp = st.flags.has(s);
-            if (isp) anyPR = true;
-            return (
-                '<div class="sr ' +
-                (s.d ? 'on' : '') +
-                (s.wu ? ' wu' : '') +
-                (isp ? ' isp' : '') +
-                '"><span class="sb">' +
-                (isp ? '★' : s.wu ? 'W' : n) +
-                '</span>' +
-                '<label class="fld"><input type="number" inputmode="decimal" step="any" data-f="w" data-e="' +
-                ei +
-                '" data-s="' +
-                si +
-                '" value="' +
-                esc(s.w) +
-                '" placeholder="' +
-                (lp ? lp.w : '0') +
-                '" aria-label="Weight in ' +
-                S.unit +
-                '"><span>' +
-                S.unit +
-                '</span></label>' +
-                '<i class="xx">×</i>' +
-                '<label class="fld"><input type="number" inputmode="numeric" data-f="r" data-e="' +
-                ei +
-                '" data-s="' +
-                si +
-                '" value="' +
-                esc(s.r) +
-                '" placeholder="' +
-                (lp && lp.r ? lp.r : '0') +
-                '" aria-label="Reps"><span>reps</span></label>' +
-                '<button class="ck" data-a="done" data-e="' +
-                ei +
-                '" data-s="' +
-                si +
-                '" aria-label="Mark set done">' +
-                IC.check +
-                '</button></div>'
-            );
-        })
-        .join('');
+        split = !!en.split,
+        sides = split ? ['L', 'R'] : [''],
+        sideName = { L: 'Left', R: 'Right' };
+    let anyPR = false;
+
+    // One block of set rows for a side ('' = the normal single list).
+    const block = (side) => {
+        const lp = lastPerf(en.ex, date, side || undefined);
+        let n = 0;
+        const rows = en.sets
+            .map((s, si) => [s, si])
+            .filter(([s]) => (s.side || '') === side)
+            .map(([s, si]) => {
+                if (!s.wu) n++;
+                const isp = st.flags.has(s);
+                if (isp) anyPR = true;
+                return (
+                    '<div class="sr ' +
+                    (s.d ? 'on' : '') +
+                    (s.wu ? ' wu' : '') +
+                    (isp ? ' isp' : '') +
+                    '"><span class="sb">' +
+                    (isp ? '★' : s.wu ? 'W' : n) +
+                    '</span>' +
+                    '<label class="fld"><input type="number" inputmode="decimal" step="any" data-f="w" data-e="' +
+                    ei +
+                    '" data-s="' +
+                    si +
+                    '" value="' +
+                    esc(s.w) +
+                    '" placeholder="' +
+                    (lp ? lp.w : '0') +
+                    '" aria-label="Weight in ' +
+                    S.unit +
+                    '"><span>' +
+                    S.unit +
+                    '</span></label>' +
+                    '<i class="xx">×</i>' +
+                    '<label class="fld"><input type="number" inputmode="numeric" data-f="r" data-e="' +
+                    ei +
+                    '" data-s="' +
+                    si +
+                    '" value="' +
+                    esc(s.r) +
+                    '" placeholder="' +
+                    (lp && lp.r ? lp.r : '0') +
+                    '" aria-label="Reps"><span>reps</span></label>' +
+                    '<button class="ck" data-a="done" data-e="' +
+                    ei +
+                    '" data-s="' +
+                    si +
+                    '" aria-label="Mark set done">' +
+                    IC.check +
+                    '</button></div>'
+                );
+            })
+            .join('');
+        const at = ' data-e="' + ei + '"' + (side ? ' data-side="' + side + '"' : '');
+        return (
+            (side ? '<div class="side-h"><i>' + side + '</i>' + sideName[side] + '</div>' : '') +
+            rows +
+            '<div style="display:flex;gap:8px;margin-top:10px"><button class="btn sm" data-a="addset"' +
+            at +
+            '>+ Set</button><button class="btn sm" data-a="addwu"' +
+            at +
+            '>+ Warm-up</button><button class="btn sm" data-a="rmset"' +
+            at +
+            ' style="margin-left:auto">− Set</button></div>'
+        );
+    };
+    const body = sides.map(block).join('');
+
+    // PR and "last time" chips: one per side when tracked left/right.
+    const prChip = (p, tag) =>
+        p
+            ? '<span class="chip st pr">PR ' +
+              tag +
+              fmtN(p.w) +
+              ' ' +
+              S.unit +
+              ' × ' +
+              fmtN(p.r) +
+              '</span>'
+            : '';
+    const lastChip = (lp, tag) =>
+        lp
+            ? '<span class="chip st">Last ' +
+              tag +
+              fmtN(lp.w) +
+              ' × ' +
+              esc(lp.r || '–') +
+              '</span>'
+            : '';
+    let chips = '';
+    if (split) {
+        chips = sides.map((sd) => prChip(st.prSide[sd], sd + ' ')).join('');
+        chips += sides.map((sd) => lastChip(lastPerf(en.ex, date, sd), sd + ' ')).join('');
+        if (!chips) chips = '<span class="chip st">No PR yet</span>';
+    } else {
+        chips =
+            (st.pr ? prChip(st.pr, '') : '<span class="chip st">No PR yet</span>') +
+            lastChip(lastPerf(en.ex, date), '');
+    }
+    if (anyPR) chips += '<span class="chip st pr">New PR!</span>';
+
     return (
         '<div class="card"><div class="ex-h"><button class="thb" data-a="exv" data-id="' +
         en.ex +
@@ -207,30 +263,16 @@ function entryHTML(en, ei, date) {
         EQ[ex.e] +
         '</div>' +
         '<div class="chips" style="margin-top:8px;gap:6px">' +
-        (st.pr
-            ? '<span class="chip st pr">PR ' +
-              fmtN(st.pr.w) +
-              ' ' +
-              S.unit +
-              ' × ' +
-              fmtN(st.pr.r) +
-              '</span>'
-            : '<span class="chip st">No PR yet</span>') +
-        (lp
-            ? '<span class="chip st">Last ' + fmtN(lp.w) + ' × ' + esc(lp.r || '–') + '</span>'
-            : '') +
-        (anyPR ? '<span class="chip st pr">New PR!</span>' : '') +
+        chips +
         '</div></div>' +
         '<button class="ib" data-a="delentry" data-e="' +
         ei +
         '" aria-label="Remove exercise" style="margin:-8px -10px 0 0;font-size:22px;color:var(--mu)">×</button></div>' +
-        rows +
-        '<div style="display:flex;gap:8px;margin-top:10px"><button class="btn sm" data-a="addset" data-e="' +
+        body +
+        '<button class="tgl" role="switch" aria-checked="' +
+        split +
+        '" data-a="split" data-e="' +
         ei +
-        '">+ Set</button><button class="btn sm" data-a="addwu" data-e="' +
-        ei +
-        '">+ Warm-up</button><button class="btn sm" data-a="rmset" data-e="' +
-        ei +
-        '" style="margin-left:auto">− Set</button></div></div>'
+        '"><span class="sw"></span><span>Track left and right separately</span></button></div>'
     );
 }

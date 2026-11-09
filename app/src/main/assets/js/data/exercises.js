@@ -688,4 +688,5 @@ const LIB = [
     ['x1', 'Forearm Machine - Wrist Curl', 6, 'M', -1],
     ['x2', 'Forearm Machine - Wrist Extension', 6, 'M', -1],
     ['x3', 'Overhead Triceps Extension - Cable Straight Bar', 5, 'C', 101],
+    ['x4', 'Ab Crunch Machine (Obliques)', 7, 'M', 1],
 ];

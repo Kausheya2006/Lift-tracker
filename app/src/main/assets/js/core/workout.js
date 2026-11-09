@@ -15,7 +15,13 @@ function addGroupEx(L, gids) {
         if (!g) return;
         g.items.forEach((it) => {
             if (!getEx(it.ex) || L.entries.some((e) => e.ex === it.ex)) return;
-            L.entries.push({ ex: it.ex, sets: mkSets(it.ex, ui.date, it.wu, it.sets, it.reps) });
+            L.entries.push(newEntry(it.ex, ui.date, it.wu, it.sets, it.reps));
         });
     });
+}
+
+// A new exercise entry for the log. Remembers if you track this exercise left/right separately.
+function newEntry(id, date, wu, n, reps) {
+    const split = !!(S.splitPref && S.splitPref[id]);
+    return { ex: id, split: split, sets: mkSets(id, date, wu, n, reps, split) };
 }

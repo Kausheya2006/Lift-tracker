@@ -2,43 +2,58 @@
 // PRs, last performance, sessions, volume and set generation.
 
 function stats(id) {
-    const flags = new Set();
-    let best = 0,
+    // PRs are tracked separately for left ('L'), right ('R') and normal ('') sets.
+    const flags = new Set(),
+        best = { '': 0, L: 0, R: 0 },
+        prSide = {};
+    let top = 0,
         pr = null;
     for (const d of Object.keys(S.logs).sort()) {
         for (const en of S.logs[d].entries || []) {
             if (en.ex !== id) continue;
             for (const s of en.sets) {
                 const w = num(s.w),
-                    r = num(s.r);
+                    r = num(s.r),
+                    k = s.side || '';
                 if (!s.d || s.wu || !(w > 0)) continue;
-                if (w > best) {
-                    if (best > 0) flags.add(s);
-                    best = w;
+                if (w > best[k]) {
+                    if (best[k] > 0) flags.add(s);
+                    best[k] = w;
+                    prSide[k] = { w, r, d };
+                } else if (w === best[k] && r > prSide[k].r) {
+                    prSide[k] = { w, r, d };
+                }
+                if (w > top) {
+                    top = w;
                     pr = { w, r, d };
-                } else if (w === best && r > pr.r) {
+                } else if (w === top && r > pr.r) {
                     pr = { w, r, d };
                 }
             }
         }
     }
-    return { pr, flags };
+    return { pr, flags, prSide };
 }
 
-function lastPerf(id, date) {
-    for (const d of Object.keys(S.logs).sort().reverse()) {
-        if (d >= date) continue;
-        for (const en of S.logs[d].entries || []) {
-            if (en.ex !== id) continue;
-            let b = null;
-            for (const s of en.sets) {
-                const w = num(s.w);
-                if (s.d && !s.wu && w > 0 && (!b || w > b.w)) b = { w, r: s.r };
+// Last session's best set. Pass side ('L' or 'R') to prefer that side's history.
+function lastPerf(id, date, side) {
+    const find = (useSide) => {
+        for (const d of Object.keys(S.logs).sort().reverse()) {
+            if (d >= date) continue;
+            for (const en of S.logs[d].entries || []) {
+                if (en.ex !== id) continue;
+                let b = null;
+                for (const s of en.sets) {
+                    if (useSide && (s.side || '') !== side) continue;
+                    const w = num(s.w);
+                    if (s.d && !s.wu && w > 0 && (!b || w > b.w)) b = { w, r: s.r };
+                }
+                if (b) return b;
             }
-            if (b) return b;
         }
-    }
-    return null;
+        return null;
+    };
+    return (side && find(true)) || find(false);
 }
 
 function sessions(id) {
@@ -89,13 +104,22 @@ const vol = (L) =>
         0
     );
 
-function mkSets(id, date, wu, n, reps) {
-    const lp = lastPerf(id, date),
-        lw = lp ? lp.w : '',
-        r = parseInt(reps) || '',
+// Builds the starting sets. With split=true you get a left list and a right list.
+function mkSets(id, date, wu, n, reps, split) {
+    const r = parseInt(reps) || '',
         out = [];
-    for (let i = 0; i < wu; i++)
-        out.push({ wu: 1, w: lw ? rnd(((lw * (i + 1)) / (wu + 1)) * 0.85) : '', r: r, d: 0 });
-    for (let i = 0; i < n; i++) out.push({ w: lw, r: r, d: 0 });
+    (split ? ['L', 'R'] : ['']).forEach((side) => {
+        const lp = lastPerf(id, date, side),
+            lw = lp ? lp.w : '',
+            mk = (o) => {
+                if (side) o.side = side;
+                return o;
+            };
+        for (let i = 0; i < wu; i++)
+            out.push(
+                mk({ wu: 1, w: lw ? rnd(((lw * (i + 1)) / (wu + 1)) * 0.85) : '', r: r, d: 0 })
+            );
+        for (let i = 0; i < n; i++) out.push(mk({ w: lw, r: r, d: 0 }));
+    });
     return out;
 }
