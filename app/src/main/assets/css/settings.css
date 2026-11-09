@@ -1,0 +1,33 @@
+/* Settings list. */
+.setlab {
+    font-size: 13px;
+    font-weight: 650;
+    color: var(--mu);
+    margin: 22px 4px 8px;
+}
+.card.lst {
+    padding: 2px 16px;
+}
+.lrow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--ln);
+    font-weight: 600;
+    text-align: left;
+}
+.lrow:last-child {
+    border-bottom: 0;
+}
+.aboutf {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 22px 4px;
+}
+.aboutf b {
+    font-size: 18px;
+    letter-spacing: -0.03em;
+}

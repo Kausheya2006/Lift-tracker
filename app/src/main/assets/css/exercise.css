@@ -1,0 +1,27 @@
+/* Exercise detail sheet. */
+.xv {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+.xv img {
+    width: 100%;
+    aspect-ratio: 3/2;
+    object-fit: cover;
+    border-radius: 14px;
+    background: var(--sf2);
+    display: block;
+}
+.xvi {
+    background: var(--sf2);
+    border-radius: 14px;
+    padding: 10px;
+    margin-bottom: 14px;
+}
+.xvi svg {
+    width: 100%;
+    height: auto;
+    max-height: 220px;
+    display: block;
+}

@@ -1,0 +1,48 @@
+/* Workout group editor and routine day rows. */
+.gi {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+.gi label {
+    flex: 1;
+    font-size: 12px;
+    color: var(--mu);
+    font-weight: 600;
+}
+.gi input {
+    display: block;
+    width: 100%;
+    margin-top: 4px;
+    background: var(--sf2);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 10px;
+    text-align: center;
+    font-weight: 700;
+    outline: none;
+    font-size: 16px;
+}
+.gi input:focus {
+    border-color: var(--ac);
+}
+.day {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--ln);
+}
+.day:last-child {
+    border-bottom: 0;
+}
+.day .d {
+    width: 48px;
+    font-weight: 700;
+    color: var(--mu);
+    font-size: 14px;
+    flex: none;
+}
+.day.now .d {
+    color: var(--ac);
+}

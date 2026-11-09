@@ -1,0 +1,126 @@
+/* Progress tab tiles and charts. */
+.tiles {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+.t3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+.t2 {
+    grid-template-columns: repeat(2, 1fr);
+}
+.tile {
+    background: var(--sf);
+    border: 1px solid var(--ln);
+    border-radius: 20px;
+    padding: 13px 14px;
+    box-shadow: var(--sh);
+}
+.tile b {
+    display: block;
+    font-size: 26px;
+    letter-spacing: -0.035em;
+    font-weight: 800;
+    line-height: 1.1;
+}
+.tile span {
+    font-size: 12.5px;
+    color: var(--mu);
+}
+.chart {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+.cg {
+    stroke: var(--ln);
+    stroke-width: 1;
+}
+.ct {
+    fill: var(--mu);
+    font-size: 10px;
+}
+.ct.tb {
+    fill: var(--tx);
+    font-weight: 700;
+}
+.cl {
+    fill: none;
+    stroke: var(--ac);
+    stroke-width: 2.5;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+.ca {
+    fill: var(--ac);
+    opacity: 0.14;
+}
+.cp {
+    fill: var(--sf);
+    stroke: var(--ac);
+    stroke-width: 2;
+}
+.cs {
+    fill: var(--prc);
+    stroke: #b88a00;
+    stroke-width: 1;
+}
+.cb {
+    fill: var(--body);
+}
+.cp2 {
+    fill: var(--ac);
+}
+.spark {
+    flex: none;
+    width: 56px;
+    height: 24px;
+}
+.spark path {
+    fill: none;
+    stroke: var(--ac);
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+.ct2 {
+    font-weight: 750;
+    font-size: 16px;
+    letter-spacing: -0.02em;
+}
+.sub2 {
+    font-size: 13px;
+    color: var(--mu);
+    margin: 2px 0 12px;
+}
+.mb {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 9px 0;
+    font-size: 14px;
+}
+.mb span {
+    width: 78px;
+    flex: none;
+    color: var(--mu);
+    font-weight: 600;
+}
+.mb b {
+    width: 26px;
+    text-align: right;
+}
+.trk {
+    flex: 1;
+    height: 10px;
+    border-radius: 5px;
+    background: var(--sf2);
+    overflow: hidden;
+}
+.trk i {
+    display: block;
+    height: 100%;
+    border-radius: 5px;
+    background: var(--ac);
+}
