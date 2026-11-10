@@ -40,7 +40,8 @@ function render() {
               '</p><div style="display:flex;gap:8px"><button class="btn grow" data-a="cn">Cancel</button><button class="btn pri grow" data-a="cy">' +
               esc(ui.confirm.yes || 'Confirm') +
               '</button></div></div></div>'
-            : '');
+            : '') +
+        (ui.setMenu ? setMenuHTML() : '');
     document.body.style.overflow = ui.stack.length ? 'hidden' : '';
     document.querySelectorAll('.pk-chips').forEach((c, i) => {
         c.scrollLeft = csl[i] || 0;

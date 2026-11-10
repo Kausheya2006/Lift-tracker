@@ -24,13 +24,7 @@ SHEETS.exview = function (s) {
                 EQ[ex.e] +
                 '</span>' +
                 (st.pr
-                    ? '<span class="chip st pr">PR ' +
-                      fmtN(st.pr.w) +
-                      ' ' +
-                      S.unit +
-                      ' × ' +
-                      fmtN(st.pr.r) +
-                      '</span>'
+                    ? '<span class="chip st pr">PR ' + fmtSet(st.pr.w, st.pr.r) + '</span>'
                     : '') +
                 '</div>' +
                 (ins.length
@@ -49,18 +43,13 @@ SHEETS.prog = function (s) {
     const ex = getEx(s.id) || { name: 'Exercise', m: 'Chest', e: 'W' },
         ss = sessions(s.id),
         st = stats(s.id);
-    const pts = ss.map((x) => ({
-        d: x.d,
-        pr: x.pr,
-        y:
-            s.metric === 'w'
-                ? x.tp.w
-                : s.metric === 'e'
-                  ? Math.round(x.e1 * 10) / 10
-                  : Math.round(x.v),
-    }));
+    const tabs = metricTabs(ss),
+        mt = tabs.some((m) => m[0] === s.metric) ? s.metric : 'w',
+        bwOnly = ss.length > 0 && ss.every((x) => x.tp.w === 0),
+        pts = metricPts(ss, mt);
     const tv = ss.reduce((a, x) => a + x.v, 0),
         b1 = ss.reduce((a, x) => Math.max(a, x.e1), 0),
+        tr = ss.reduce((a, x) => a + x.tr, 0),
         np = ss.filter((x) => x.pr).length;
     return wrap(
         'Progress',
@@ -76,12 +65,14 @@ SHEETS.prog = function (s) {
                 '</div></div></div>' +
                 '<div class="tiles t2"><div class="tile"><b>' +
                 (st.pr
-                    ? fmtN(st.pr.w) +
-                      ' <small style="font-size:14px">' +
-                      S.unit +
-                      ' × ' +
-                      fmtN(st.pr.r) +
-                      '</small>'
+                    ? st.pr.w > 0
+                        ? fmtN(st.pr.w) +
+                          ' <small style="font-size:14px">' +
+                          S.unit +
+                          ' × ' +
+                          fmtN(st.pr.r) +
+                          '</small>'
+                        : fmtN(st.pr.r) + ' <small style="font-size:14px">reps</small>'
                     : '–') +
                 '</b><span>Personal record</span></div><div class="tile"><b>' +
                 (b1
@@ -94,20 +85,21 @@ SHEETS.prog = function (s) {
                 ss.length +
                 (np ? ' <small style="font-size:14px">★ ' + np + '</small>' : '') +
                 '</b><span>Sessions</span></div><div class="tile"><b>' +
-                (tv >= 10000 ? fmtN(tv / 1000) + 'k' : Math.round(tv)) +
-                ' <small style="font-size:14px">' +
-                S.unit +
-                '</small></b><span>Total volume</span></div></div>' +
+                (bwOnly
+                    ? tr + ' <small style="font-size:14px">reps</small>'
+                    : (tv >= 10000 ? fmtN(tv / 1000) + 'k' : Math.round(tv)) +
+                      ' <small style="font-size:14px">' +
+                      S.unit +
+                      '</small>') +
+                '</b><span>' +
+                (bwOnly ? 'Total reps' : 'Total volume') +
+                '</span></div></div>' +
                 '<div class="seg">' +
-                [
-                    ['w', 'Top weight'],
-                    ['e', 'Est. 1RM'],
-                    ['v', 'Volume'],
-                ]
+                tabs
                     .map(
                         (m) =>
                             '<button class="' +
-                            (s.metric === m[0] ? 'on' : '') +
+                            (mt === m[0] ? 'on' : '') +
                             '" data-a="pmet" data-v="' +
                             m[0] +
                             '">' +
@@ -120,9 +112,7 @@ SHEETS.prog = function (s) {
                 (pts.length
                     ? lineChart(
                           pts,
-                          s.metric === 'v'
-                              ? (v) => Math.round(v)
-                              : (v) => fmtN(Math.round(v * 10) / 10)
+                          mt === 'v' ? (v) => Math.round(v) : (v) => fmtN(Math.round(v * 10) / 10)
                       )
                     : '<div class="empty">No sets logged yet</div>') +
                 (np
@@ -140,20 +130,16 @@ SHEETS.prog = function (s) {
                             '</span><b style="font-size:16px">' +
                             esc(sdate(x.d)) +
                             '</b></div><div class="hb"><div class="g">' +
-                            fmtN(x.tp.w) +
-                            ' ' +
-                            S.unit +
-                            ' × ' +
-                            fmtN(x.tp.r) +
+                            fmtSet(x.tp.w, x.tp.r) +
                             '</div><div class="x">' +
                             x.n +
                             ' working set' +
                             (x.n > 1 ? 's' : '') +
                             ' · ' +
-                            Math.round(x.v) +
-                            ' ' +
-                            S.unit +
-                            ' volume</div></div>' +
+                            (x.v > 0
+                                ? Math.round(x.v) + ' ' + S.unit + ' volume'
+                                : x.tr + ' total reps') +
+                            '</div></div>' +
                             (x.pr ? '<span class="star">★</span>' : '') +
                             '</div>'
                     )

@@ -59,7 +59,7 @@ Object.assign(A, {
         const en = lg().entries[+t.dataset.e],
             s = en.sets[+t.dataset.s];
         s.d = s.d ? 0 : 1;
-        if (s.d && !s.w) {
+        if (s.d && !s.w && !s.dr) {
             const lp = lastPerf(en.ex, ui.date, s.side);
             if (lp) s.w = lp.w;
         }
@@ -77,7 +77,7 @@ Object.assign(A, {
         const sets = lg().entries[+t.dataset.e].sets,
             side = t.dataset.side,
             mine = sets.map((s, i) => [s, i]).filter(([s]) => !side || s.side === side),
-            p = [...mine].reverse().find(([s]) => !s.wu),
+            p = [...mine].reverse().find(([s]) => !s.wu && !s.dr),
             ns = { w: p ? p[0].w : '', r: p ? p[0].r : '', d: 0 };
         if (side) ns.side = side;
         sets.splice(mine.length ? mine[mine.length - 1][1] + 1 : sets.length, 0, ns);
@@ -88,10 +88,56 @@ Object.assign(A, {
         const sets = lg().entries[+t.dataset.e].sets,
             side = t.dataset.side,
             mine = sets.map((s, i) => [s, i]).filter(([s]) => !side || s.side === side),
-            f = mine.find(([s]) => !s.wu),
+            f = mine.find(([s]) => !s.wu && !s.dr),
             ns = { wu: 1, w: f && f[0].w ? rnd(num(f[0].w) * 0.5) : '', r: f ? f[0].r : '', d: 0 };
         if (side) ns.side = side;
         sets.splice((mine.length ? mine[0][1] : 0) + mine.filter(([s]) => s.wu).length, 0, ns);
+        save();
+        render();
+    },
+    // Drop set: a lighter set straight after a working set. It never counts towards PRs.
+    adddrop: (t) => {
+        const sets = lg().entries[+t.dataset.e].sets,
+            side = t.dataset.side,
+            mine = sets.map((s, i) => [s, i]).filter(([s]) => !side || s.side === side),
+            prev = [...mine].reverse().find(([s]) => !s.wu),
+            pw = prev ? num(prev[0].w) : 0,
+            ns = { dr: 1, w: pw ? rnd(pw * 0.8) : '', r: prev ? prev[0].r : '', d: 0 };
+        if (side) ns.side = side;
+        sets.splice(mine.length ? mine[mine.length - 1][1] + 1 : sets.length, 0, ns);
+        save();
+        render();
+    },
+    // Tapping a set number opens a menu: change the set type or delete that set.
+    setmenu: (t) => {
+        ui.setMenu = { e: +t.dataset.e, s: +t.dataset.s };
+        render();
+    },
+    settype: (t) => {
+        const m = ui.setMenu,
+            s = lg().entries[m.e].sets[m.s],
+            k = t.dataset.t;
+        delete s.wu;
+        delete s.dr;
+        if (k === 'w') s.wu = 1;
+        if (k === 'd') s.dr = 1;
+        ui.setMenu = null;
+        save();
+        render();
+    },
+    setdel: () => {
+        const m = ui.setMenu;
+        lg().entries[m.e].sets.splice(m.s, 1);
+        ui.setMenu = null;
+        save();
+        render();
+    },
+    moveentry: (t) => {
+        const a = lg().entries,
+            i = +t.dataset.e,
+            j = i + +t.dataset.dir;
+        if (j < 0 || j >= a.length) return;
+        [a[i], a[j]] = [a[j], a[i]];
         save();
         render();
     },

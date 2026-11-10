@@ -1,34 +1,44 @@
 'use strict';
 // PRs, last performance, sessions, volume and set generation.
 
+// Bodyweight exercises (equipment W) may be done with no added weight; reps alone count there.
+const isBodyweight = (id) => {
+    const x = getEx(id);
+    return !!x && x.e === 'W';
+};
+
+// A set counts towards PRs when it is done and is a normal working set: not a warm-up and not a
+// drop set. Without added weight it only counts for bodyweight exercises.
+const scored = (s, bw) => s.d && !s.wu && !s.dr && (num(s.w) > 0 || (bw && num(s.r) > 0));
+
+// Higher weight wins; at the same weight, more reps win.
+const beats = (w, r, b) => !b || w > b.w || (w === b.w && r > b.r);
+
+// Set to false if the very first set of an exercise should not be marked as a PR.
+const PR_FIRST_SET = true;
+
+// "65 kg x 8", or "8 reps" for a bodyweight set with no added weight.
+const fmtSet = (w, r) => (w > 0 ? fmtN(w) + ' ' + S.unit + ' × ' + fmtN(r) : fmtN(r) + ' reps');
+
 function stats(id) {
     // PRs are tracked separately for left ('L'), right ('R') and normal ('') sets.
-    const flags = new Set(),
-        best = { '': 0, L: 0, R: 0 },
+    const bw = isBodyweight(id),
+        flags = new Set(),
         prSide = {};
-    let top = 0,
-        pr = null;
+    let pr = null;
     for (const d of Object.keys(S.logs).sort()) {
         for (const en of S.logs[d].entries || []) {
             if (en.ex !== id) continue;
             for (const s of en.sets) {
+                if (!scored(s, bw)) continue;
                 const w = num(s.w),
                     r = num(s.r),
                     k = s.side || '';
-                if (!s.d || s.wu || !(w > 0)) continue;
-                if (w > best[k]) {
-                    if (best[k] > 0) flags.add(s);
-                    best[k] = w;
-                    prSide[k] = { w, r, d };
-                } else if (w === best[k] && r > prSide[k].r) {
+                if (beats(w, r, prSide[k])) {
+                    if (prSide[k] || PR_FIRST_SET) flags.add(s);
                     prSide[k] = { w, r, d };
                 }
-                if (w > top) {
-                    top = w;
-                    pr = { w, r, d };
-                } else if (w === top && r > pr.r) {
-                    pr = { w, r, d };
-                }
+                if (beats(w, r, pr)) pr = { w, r, d };
             }
         }
     }
@@ -37,6 +47,7 @@ function stats(id) {
 
 // Last session's best set. Pass side ('L' or 'R') to prefer that side's history.
 function lastPerf(id, date, side) {
+    const bw = isBodyweight(id);
     const find = (useSide) => {
         for (const d of Object.keys(S.logs).sort().reverse()) {
             if (d >= date) continue;
@@ -45,8 +56,9 @@ function lastPerf(id, date, side) {
                 let b = null;
                 for (const s of en.sets) {
                     if (useSide && (s.side || '') !== side) continue;
+                    if (!scored(s, bw)) continue;
                     const w = num(s.w);
-                    if (s.d && !s.wu && w > 0 && (!b || w > b.w)) b = { w, r: s.r };
+                    if (beats(w, num(s.r), b && { w: b.w, r: num(b.r) })) b = { w, r: s.r };
                 }
                 if (b) return b;
             }
@@ -56,8 +68,10 @@ function lastPerf(id, date, side) {
     return (side && find(true)) || find(false);
 }
 
+// One row per exercise per day. Drop sets add to volume and set count but never set the top set.
 function sessions(id) {
-    const out = [],
+    const bw = isBodyweight(id),
+        out = [],
         fl = stats(id).flags;
     for (const d of Object.keys(S.logs).sort()) {
         for (const en of S.logs[d].entries || []) {
@@ -65,19 +79,22 @@ function sessions(id) {
             let tp = null,
                 n = 0,
                 v = 0,
+                tr = 0,
                 e1 = 0,
                 pr = false;
             for (const s of en.sets) {
                 const w = num(s.w),
                     r = num(s.r);
-                if (!s.d || s.wu || !(w > 0)) continue;
+                if (!s.d || s.wu || !(w > 0 || (bw && r > 0))) continue;
                 n++;
                 v += w * r;
+                tr += r;
+                if (s.dr) continue;
                 e1 = Math.max(e1, w * (1 + r / 30));
-                if (!tp || w > tp.w || (w === tp.w && r > tp.r)) tp = { w, r };
+                if (beats(w, r, tp)) tp = { w, r };
                 if (fl.has(s)) pr = true;
             }
-            if (n) out.push({ d, tp, n, v, e1, pr });
+            if (tp) out.push({ d, tp, n, v, e1, tr, pr });
         }
     }
     return out;

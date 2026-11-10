@@ -11,12 +11,12 @@ The stored data format has its own version, the `v` field of the saved document 
 
 ## Summary
 
-| Version | Date | Commit | Summary |
-| --- | --- | --- | --- |
-| 1.5.0 | Unreleased | not yet committed | Left and right tracking, README, MIT license, technical documentation |
-| 1.4.2 | 2026-11-10 | `2254088` | Exercise list additions and renames |
-| 1.4.1 | 2026-11-10 | `d06eb25` | Real exercise photos, modular `assets/` layout |
-| 1.3.0 | 2026-11-09 | `ea2ff40` | Initial release |
+| Version | Date | Commit    | Summary |
+| --- | --- |-----------| --- |
+| 1.5.0 | Unreleased | `2a449aa` | Left and right tracking, README, MIT license, technical documentation |
+| 1.4.2 | 2026-11-10 | `793e48d` | Exercise list additions and renames |
+| 1.4.1 | 2026-11-10 | `f947a64` | Real exercise photos, modular `assets/` layout |
+| 1.3.0 | 2026-11-09 | `7a74f82` | Initial release |
 
 ## How to add an entry
 
@@ -31,7 +31,7 @@ Use the `Unreleased` heading for work in progress and rename it when releasing.
 
 ## 1.5.0 - Unreleased
 
-Commit: not yet committed.
+Commit: `2a449aa`
 
 ### Added
 
@@ -54,7 +54,7 @@ Saved data version `v` is unchanged. New optional fields: `splitPref` (top level
 
 ## 1.4.2 - 2026-11-10
 
-Commit: `2254088` "Added/modified exercises in exercises.js".
+Commit: `793e48d` "Added/modified exercises in exercises.js".
 
 ### Added
 
@@ -72,7 +72,7 @@ Exercise identifiers are unchanged. `x3` is a new identifier.
 
 ## 1.4.1 - 2026-11-10
 
-Commit: `d06eb25` "Added real photos inplace of logos + modularised assets/".
+Commit: `f947a64` "Added real photos inplace of logos + modularised assets/".
 
 ### Added
 
@@ -99,7 +99,7 @@ Exercise identifiers are unchanged. `x1` and `x2` are new identifiers.
 
 ## 1.3.0 - 2026-11-09
 
-Commit: `ea2ff40` "Initial commit: Lift workout tracker (Android WebView app)". Android `versionCode` 1.
+Commit: `7a74f82` "Initial commit: Lift workout tracker (Android WebView app)". Android `versionCode` 1.
 
 ### Added
 

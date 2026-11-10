@@ -76,6 +76,7 @@ Object.assign(A, {
     },
     cn: () => {
         ui.confirm = null;
+        ui.setMenu = null;
         render();
     },
 });

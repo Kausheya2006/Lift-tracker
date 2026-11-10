@@ -37,12 +37,14 @@ function pgRows() {
                 ' session' +
                 (r.ss.length > 1 ? 's' : '') +
                 ' · last ' +
-                fmtN(last.tp.w) +
-                ' × ' +
-                fmtN(last.tp.r) +
+                fmtSet(last.tp.w, last.tp.r) +
                 '</div></div>' +
                 spark(r.ss) +
-                (st.pr ? '<span class="chip st pr">' + fmtN(st.pr.w) + '</span>' : '') +
+                (st.pr
+                    ? '<span class="chip st pr">' +
+                      (st.pr.w > 0 ? fmtN(st.pr.w) : fmtN(st.pr.r) + ' reps') +
+                      '</span>'
+                    : '') +
                 '</button>'
             );
         })
@@ -98,12 +100,34 @@ function topLifts() {
         .sort((a, b) => b.ss.length - a.ss.length);
 }
 
-const metricPts = (ss, m) =>
-    ss.map((x) => ({
-        d: x.d,
-        pr: x.pr,
-        y: m === 'w' ? x.tp.w : m === 'e' ? Math.round(x.e1 * 10) / 10 : Math.round(x.v),
-    }));
+// Chart value for one session. Bodyweight lifts with no added weight chart reps instead.
+const metricY = (x, m) =>
+    m === 'w'
+        ? x.tp.w > 0
+            ? x.tp.w
+            : x.tp.r
+        : m === 'e'
+          ? x.e1 > 0
+              ? Math.round(x.e1 * 10) / 10
+              : x.tp.r
+          : x.v > 0
+            ? Math.round(x.v)
+            : x.tr;
+
+const metricPts = (ss, m) => ss.map((x) => ({ d: x.d, pr: x.pr, y: metricY(x, m) }));
+
+// Metric buttons. A lift that never used added weight shows reps and hides estimated 1RM.
+const metricTabs = (ss) =>
+    ss.every((x) => x.tp.w === 0)
+        ? [
+              ['w', 'Best reps'],
+              ['v', 'Total reps'],
+          ]
+        : [
+              ['w', 'Top weight'],
+              ['e', 'Est. 1RM'],
+              ['v', 'Volume'],
+          ];
 
 function vProg() {
     let h = head('Progress');
@@ -148,6 +172,7 @@ function vProg() {
         (pc ? ' ★' : '') +
         '</b><span>New PRs</span></div></div>';
     const sel = tl.find((r) => r.id === ui.pex) || tl[0];
+    const pm = metricTabs(sel.ss).some((m) => m[0] === ui.pm) ? ui.pm : 'w';
     h +=
         '<div class="card"><div class="ct2">Lift progress</div><div class="sub2">Pick a lift to see how it’s trending</div><div class="pk-chips" style="padding:0 0 10px;margin:0 -2px">' +
         tl
@@ -165,15 +190,11 @@ function vProg() {
             .join('') +
         '</div>' +
         '<div class="seg">' +
-        [
-            ['w', 'Top weight'],
-            ['e', 'Est. 1RM'],
-            ['v', 'Volume'],
-        ]
+        metricTabs(sel.ss)
             .map(
                 (m) =>
                     '<button class="' +
-                    (ui.pm === m[0] ? 'on' : '') +
+                    (pm === m[0] ? 'on' : '') +
                     '" data-a="pmi" data-v="' +
                     m[0] +
                     '">' +
@@ -182,10 +203,7 @@ function vProg() {
             )
             .join('') +
         '</div>' +
-        lineChart(
-            metricPts(sel.ss, ui.pm),
-            ui.pm === 'v' ? fmtK : (x) => fmtN(Math.round(x * 10) / 10)
-        ) +
+        lineChart(metricPts(sel.ss, pm), pm === 'v' ? fmtK : (x) => fmtN(Math.round(x * 10) / 10)) +
         '<div class="mu sm-t" style="margin:6px 0 12px">★ marks a session with a new PR</div><button class="btn sm" data-a="openProg" data-id="' +
         sel.id +
         '">Open details</button></div>';

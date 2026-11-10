@@ -144,6 +144,7 @@ function vChoose(d) {
 function entryHTML(en, ei, date) {
     const ex = getEx(en.ex) || { name: 'Removed exercise', m: 'Chest', e: 'W' },
         st = stats(en.ex),
+        total = (S.logs[date] || { entries: [] }).entries.length,
         split = !!en.split,
         sides = split ? ['L', 'R'] : [''],
         sideName = { L: 'Left', R: 'Right' };
@@ -157,17 +158,22 @@ function entryHTML(en, ei, date) {
             .map((s, si) => [s, si])
             .filter(([s]) => (s.side || '') === side)
             .map(([s, si]) => {
-                if (!s.wu) n++;
+                if (!s.wu && !s.dr) n++;
                 const isp = st.flags.has(s);
                 if (isp) anyPR = true;
                 return (
                     '<div class="sr ' +
                     (s.d ? 'on' : '') +
                     (s.wu ? ' wu' : '') +
+                    (s.dr ? ' dr' : '') +
                     (isp ? ' isp' : '') +
-                    '"><span class="sb">' +
-                    (isp ? '★' : s.wu ? 'W' : n) +
-                    '</span>' +
+                    '"><button class="sb" data-a="setmenu" data-e="' +
+                    ei +
+                    '" data-s="' +
+                    si +
+                    '" aria-label="Set options">' +
+                    (isp ? '★' : s.wu ? 'W' : s.dr ? 'D' : n) +
+                    '</button>' +
                     '<label class="fld"><input type="number" inputmode="decimal" step="any" data-f="w" data-e="' +
                     ei +
                     '" data-s="' +
@@ -205,11 +211,13 @@ function entryHTML(en, ei, date) {
         return (
             (side ? '<div class="side-h"><i>' + side + '</i>' + sideName[side] + '</div>' : '') +
             rows +
-            '<div style="display:flex;gap:8px;margin-top:10px"><button class="btn sm" data-a="addset"' +
+            '<div class="sbtns"><button class="btn sm" data-a="addset"' +
             at +
             '>+ Set</button><button class="btn sm" data-a="addwu"' +
             at +
-            '>+ Warm-up</button><button class="btn sm" data-a="rmset"' +
+            '>+ Warm-up</button><button class="btn sm" data-a="adddrop"' +
+            at +
+            '>+ Drop set</button><button class="btn sm" data-a="rmset"' +
             at +
             ' style="margin-left:auto">− Set</button></div>'
         );
@@ -218,23 +226,12 @@ function entryHTML(en, ei, date) {
 
     // PR and "last time" chips: one per side when tracked left/right.
     const prChip = (p, tag) =>
-        p
-            ? '<span class="chip st pr">PR ' +
-              tag +
-              fmtN(p.w) +
-              ' ' +
-              S.unit +
-              ' × ' +
-              fmtN(p.r) +
-              '</span>'
-            : '';
+        p ? '<span class="chip st pr">PR ' + tag + fmtSet(p.w, p.r) + '</span>' : '';
     const lastChip = (lp, tag) =>
         lp
             ? '<span class="chip st">Last ' +
               tag +
-              fmtN(lp.w) +
-              ' × ' +
-              esc(lp.r || '–') +
+              (lp.w > 0 ? fmtN(lp.w) + ' × ' + esc(lp.r || '–') : fmtN(num(lp.r)) + ' reps') +
               '</span>'
             : '';
     let chips = '';
@@ -265,14 +262,49 @@ function entryHTML(en, ei, date) {
         '<div class="chips" style="margin-top:8px;gap:6px">' +
         chips +
         '</div></div>' +
-        '<button class="ib" data-a="delentry" data-e="' +
+        '<div class="ctl"><button class="ib sm" data-a="moveentry" data-dir="-1" data-e="' +
         ei +
-        '" aria-label="Remove exercise" style="margin:-8px -10px 0 0;font-size:22px;color:var(--mu)">×</button></div>' +
+        '"' +
+        (ei === 0 ? ' disabled' : '') +
+        ' aria-label="Move exercise up">↑</button><button class="ib sm" data-a="moveentry" data-dir="1" data-e="' +
+        ei +
+        '"' +
+        (ei === total - 1 ? ' disabled' : '') +
+        ' aria-label="Move exercise down">↓</button><button class="ib sm" data-a="delentry" data-e="' +
+        ei +
+        '" aria-label="Remove exercise">×</button></div></div>' +
         body +
         '<button class="tgl" role="switch" aria-checked="' +
         split +
         '" data-a="split" data-e="' +
         ei +
         '"><span class="sw"></span><span>Track left and right separately</span></button></div>'
+    );
+}
+
+// Dialog opened by tapping a set number: change the set type or delete the set.
+function setMenuHTML() {
+    const m = ui.setMenu,
+        L = S.logs[ui.date],
+        s = L && L.entries[m.e] && L.entries[m.e].sets[m.s];
+    if (!s) return '';
+    const cur = s.wu ? 'w' : s.dr ? 'd' : 'n';
+    const opt = (t, label, hint) =>
+        '<button class="opt' +
+        (cur === t ? ' on' : '') +
+        '" data-a="settype" data-t="' +
+        t +
+        '"><b>' +
+        label +
+        '</b><span>' +
+        hint +
+        '</span></button>';
+    return (
+        '<div class="cf"><div class="card"><div class="ct2" style="margin-bottom:10px">Set options</div>' +
+        opt('n', 'Normal set', 'Counts towards PRs') +
+        opt('w', 'Warm-up', 'Never counts towards PRs or volume') +
+        opt('d', 'Drop set', 'Lighter set after a working set. PRs use the heavier set') +
+        '<button class="opt dgr" data-a="setdel"><b>Delete this set</b></button>' +
+        '<button class="btn blk" data-a="cn" style="margin-top:6px">Cancel</button></div></div>'
     );
 }

@@ -47,6 +47,7 @@ const ui = {
     pm: 'w',
     stack: [],
     confirm: null,
+    setMenu: null,
 };
 
 const topSheet = () => ui.stack[ui.stack.length - 1];
